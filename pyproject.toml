@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ailock"
-version = "0.1.0"
+version = "0.2.0"
 description = "Cryptographic lockfile for AI/LLM Python dependencies — catches supply chain attacks before they hit prod"
 readme = "README.md"
 license = {text = "MIT"}

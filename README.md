@@ -7,6 +7,7 @@
 [![CI](https://github.com/midnightrunai/ailock/actions/workflows/ailock-ci.yml/badge.svg)](https://github.com/midnightrunai/ailock/actions/workflows/ailock-ci.yml)
 [![Security](https://img.shields.io/badge/security-supply%20chain-red)](https://midnightrun.ai/ailock)
 [![Known-Bad DB](https://img.shields.io/badge/known--bad%20DB-6%20entries-orange)](ailock/data/known-bad.json)
+[![Version](https://img.shields.io/badge/version-0.2.0-blue)](https://github.com/midnightrunai/ailock/releases)
 [![PyPI](https://img.shields.io/pypi/v/ailock)](https://pypi.org/project/ailock/)
 
 ---
