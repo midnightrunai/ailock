@@ -1,0 +1,233 @@
+{
+  "schema_version": "1",
+  "description": "Community-maintained database of known-bad AI/LLM Python package versions. Submit PRs at https://github.com/midnightrunai/ailock",
+  "last_updated": "2026-03-27",
+  "entries": [
+    {
+      "package": "litellm",
+      "version": "1.82.7",
+      "hashes": [
+        "sha256:8395c3268d5c5dbae1c7c6d4bb3c318c752ba4608cfcd90eb97ffb94a910eac2"
+      ],
+      "severity": "CRITICAL",
+      "cve": "CVE-2026-33634",
+      "cvss": "9.4",
+      "description": "Malicious version published by TeamPCP on March 24, 2026 at 10:39 UTC after compromising maintainer PyPI credentials via a poisoned Trivy CI scanner. Contains a 3-stage payload embedded in litellm/proxy/proxy_server.py: credential harvester (SSH keys, cloud tokens, .env files, Kubernetes secrets), lateral movement across Kubernetes clusters, and a persistent systemd backdoor. Exfiltrates to models.litellm.cloud as tpcp.tar.gz, encrypted with AES-256-CBC + RSA-4096. Hash above is the malicious wheel SHA256.",
+      "attack_type": "ci_cd_credential_theft",
+      "reported_at": "2026-03-24",
+      "indicators": [
+        "Outbound HTTPS to models.litellm.cloud",
+        "Creation of ~/.config/sysmon/sysmon.py",
+        "Systemd service at ~/.config/systemd/user/sysmon.service",
+        "Files /tmp/pglog or /tmp/.pg_state",
+        "SHA256 of wheel: 8395c3268d5c5dbae1c7c6d4bb3c318c752ba4608cfcd90eb97ffb94a910eac2"
+      ],
+      "iocs": {
+        "c2_domains": ["models.litellm.cloud", "checkmarx.zone"],
+        "malicious_files": [
+          {
+            "filename": "litellm-1.82.7-py3-none-any.whl",
+            "sha256": "8395c3268d5c5dbae1c7c6d4bb3c318c752ba4608cfcd90eb97ffb94a910eac2"
+          },
+          {
+            "filename": "proxy_server.py (backdoored)",
+            "sha256": "a0d229be8efcb2f9135e2ad55ba275b76ddcfeb55fa4370e0a522a5bdee0120b"
+          }
+        ]
+      },
+      "references": [
+        "https://securitylabs.datadoghq.com/articles/litellm-compromised-pypi-teampcp-supply-chain-campaign/",
+        "https://www.endorlabs.com/learn/teampcp-isnt-done",
+        "https://docs.litellm.ai/blog/security-update-march-2026",
+        "https://www.bleepingcomputer.com/news/security/popular-litellm-pypi-package-compromised-in-teampcp-supply-chain-attack/",
+        "https://www.reversinglabs.com/blog/teampcp-supply-chain-attack-spreads"
+      ],
+      "remediation": "Upgrade to litellm >= 1.83.0 (verified clean). Treat any host that imported this version as fully compromised. Rotate ALL secrets immediately: OpenAI keys, Anthropic keys, AWS credentials, Kubernetes service accounts, SSH keys, .env file contents. Audit outbound traffic for connections to models.litellm.cloud. Check for persistence: ~/.config/sysmon/ and systemd user services.",
+      "note": "Both version-based and hash-based detection enabled. If you have ailock verify installed with a pre-attack lockfile showing a different hash, that IS the detection working — your lockfile caught the swap."
+    },
+    {
+      "package": "litellm",
+      "version": "1.82.8",
+      "hashes": [
+        "sha256:d2a0d5f564628773b6af7b9c11f6b86531a875bd2d186d7081ab62748a800ebb"
+      ],
+      "severity": "CRITICAL",
+      "cve": "CVE-2026-33634",
+      "cvss": "9.4",
+      "description": "Second malicious version published by TeamPCP on March 24, 2026 at 10:52 UTC, 13 minutes after 1.82.7. More dangerous than 1.82.7: adds litellm_init.pth to site-packages, which fires on EVERY Python interpreter startup — including when pip or an IDE language server starts. No import required. The .pth file triggers the full 3-stage credential harvester, lateral movement, and persistence payload.",
+      "attack_type": "ci_cd_credential_theft",
+      "reported_at": "2026-03-24",
+      "indicators": [
+        "Presence of litellm_init.pth in site-packages (fires without any import)",
+        "Outbound HTTPS to models.litellm.cloud",
+        "Creation of ~/.config/sysmon/sysmon.py",
+        "Systemd service at ~/.config/systemd/user/sysmon.service",
+        "SHA256 of wheel: d2a0d5f564628773b6af7b9c11f6b86531a875bd2d186d7081ab62748a800ebb"
+      ],
+      "iocs": {
+        "c2_domains": ["models.litellm.cloud", "checkmarx.zone"],
+        "malicious_files": [
+          {
+            "filename": "litellm-1.82.8-py3-none-any.whl",
+            "sha256": "d2a0d5f564628773b6af7b9c11f6b86531a875bd2d186d7081ab62748a800ebb"
+          },
+          {
+            "filename": "litellm_init.pth (persistence dropper)",
+            "sha256": "71e35aef03099cd1f2d6446734273025a163597de93912df321ef118bf135238"
+          }
+        ]
+      },
+      "references": [
+        "https://securitylabs.datadoghq.com/articles/litellm-compromised-pypi-teampcp-supply-chain-campaign/",
+        "https://www.endorlabs.com/learn/teampcp-isnt-done",
+        "https://docs.litellm.ai/blog/security-update-march-2026",
+        "https://www.bleepingcomputer.com/news/security/popular-litellm-pypi-package-compromised-in-teampcp-supply-chain-attack/"
+      ],
+      "remediation": "Upgrade to litellm >= 1.83.0 (verified clean). Critical: check for litellm_init.pth in ALL Python site-packages directories — this file persists even after uninstalling litellm. Run: python -c \"import site; print(site.getsitepackages())\" then ls each path for litellm_init.pth and delete it. Rotate ALL credentials.",
+      "note": "The .pth injection mechanism means this version compromises a system even if litellm is never explicitly imported. pip install --require-hashes passes on this version because the malicious content was published via legitimate credentials."
+    },
+    {
+      "package": "telnyx",
+      "version": "4.87.1",
+      "hashes": [
+        "sha256:7321caa303fe96ded0492c747d2f353c4f7d17185656fe292ab0a59e2bd0b8d9"
+      ],
+      "severity": "CRITICAL",
+      "cve": "CVE-2026-33634",
+      "cvss": "9.4",
+      "description": "Malicious version published by TeamPCP on March 27, 2026 at 03:51 UTC. Credentials to publish were harvested from a LiteLLM victim's environment. Malicious code injected into telnyx/_client.py (74 lines). Fetches platform-specific payloads via WAV steganography from C2 at 83.142.209.203:8080 (hangup.wav on Windows, ringtone.wav on Linux/macOS). On Windows: drops msbuild.exe to Startup folder for persistence. On Linux/macOS: harvests credentials and exfiltrates as tpcp.tar.gz (AES-256-CBC + RSA-4096).",
+      "attack_type": "credential_cascade",
+      "reported_at": "2026-03-27",
+      "indicators": [
+        "Outbound HTTP to 83.142.209.203:8080",
+        "Fetch of hangup.wav (Windows) or ringtone.wav (Linux/macOS) from C2",
+        "msbuild.exe in %APPDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\ (Windows)",
+        "SHA256 of wheel: 7321caa303fe96ded0492c747d2f353c4f7d17185656fe292ab0a59e2bd0b8d9"
+      ],
+      "iocs": {
+        "c2_ips": ["83.142.209.203:8080"],
+        "c2_endpoints": ["/hangup.wav", "/ringtone.wav"],
+        "persistence": "msbuild.exe in Windows Startup folder",
+        "exfil_header": "X-Filename: tpcp.tar.gz",
+        "malicious_files": [
+          {
+            "filename": "telnyx-4.87.1-py3-none-any.whl",
+            "sha256": "7321caa303fe96ded0492c747d2f353c4f7d17185656fe292ab0a59e2bd0b8d9"
+          }
+        ]
+      },
+      "references": [
+        "https://www.aikido.dev/blog/telnyx-pypi-compromised-teampcp-canisterworm",
+        "https://thehackernews.com/2026/03/teampcp-pushes-malicious-telnyx.html",
+        "https://github.com/team-telnyx/telnyx-python/issues/235",
+        "https://cybersecuritynews.com/telnyx-pypi-package-compromised/",
+        "https://www.helpnetsecurity.com/2026/03/27/teampcp-telnyx-supply-chain-compromise/"
+      ],
+      "remediation": "Downgrade to telnyx==4.87.0 (verified clean). On Windows: check for and delete msbuild.exe in %APPDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\. Block outbound traffic to 83.142.209.203. Rotate all credentials accessible from affected systems. The package has been quarantined by PyPI as of 10:13 UTC March 27, 2026."
+    },
+    {
+      "package": "telnyx",
+      "version": "4.87.2",
+      "hashes": [
+        "sha256:cd08115806662469bbedec4b03f8427b97c8a4b3bc1442dc18b72b4e19395fe3"
+      ],
+      "severity": "CRITICAL",
+      "cve": "CVE-2026-33634",
+      "cvss": "9.4",
+      "description": "Second malicious Telnyx version published by TeamPCP on March 27, 2026. Same payload as 4.87.1. Uses WAV steganography to fetch and execute platform-specific malware from 83.142.209.203:8080. Part of the cascading TeamPCP credential harvest — credentials to publish this version were originally stolen from a LiteLLM 1.82.7/1.82.8 victim.",
+      "attack_type": "credential_cascade",
+      "reported_at": "2026-03-27",
+      "indicators": [
+        "Outbound HTTP to 83.142.209.203:8080",
+        "Fetch of hangup.wav (Windows) or ringtone.wav (Linux/macOS) from C2",
+        "SHA256 of wheel: cd08115806662469bbedec4b03f8427b97c8a4b3bc1442dc18b72b4e19395fe3"
+      ],
+      "iocs": {
+        "c2_ips": ["83.142.209.203:8080"],
+        "malicious_files": [
+          {
+            "filename": "telnyx-4.87.2-py3-none-any.whl",
+            "sha256": "cd08115806662469bbedec4b03f8427b97c8a4b3bc1442dc18b72b4e19395fe3"
+          }
+        ]
+      },
+      "references": [
+        "https://www.aikido.dev/blog/telnyx-pypi-compromised-teampcp-canisterworm",
+        "https://github.com/team-telnyx/telnyx-python/issues/235",
+        "https://www.helpnetsecurity.com/2026/03/27/teampcp-telnyx-supply-chain-compromise/"
+      ],
+      "remediation": "Downgrade to telnyx==4.87.0 (verified clean). Rotate all credentials. Block 83.142.209.203. See telnyx 4.87.1 entry for full remediation."
+    },
+    {
+      "package": "ultralytics",
+      "version": "8.3.41",
+      "hashes": [],
+      "severity": "HIGH",
+      "cve": null,
+      "description": "Malicious code injected via compromised CI/CD pipeline (GitHub Actions). The attacker gained access to the ultralytics PyPI publishing workflow and injected a cryptominer. Affected the popular computer vision / YOLO library.",
+      "attack_type": "ci_cd_compromise",
+      "reported_at": "2024-12",
+      "indicators": [
+        "Unexpected CPU usage after install",
+        "Background processes spawned during import",
+        "Outbound connections to mining pool endpoints"
+      ],
+      "references": [
+        "https://github.com/ultralytics/ultralytics/issues/18027",
+        "https://socket.dev/blog/ultralytics-supply-chain-attack"
+      ],
+      "remediation": "Upgrade to ultralytics >= 8.3.43 (patched). Check for cryptominer processes. Review any models or data processed with the affected version.",
+      "note": "Included as a real-world example of CI/CD compromise vs. direct PyPI tampering."
+    },
+    {
+      "package": "openai-gptx",
+      "version": "0.0.1",
+      "hashes": [],
+      "severity": "HIGH",
+      "cve": null,
+      "description": "Typosquat targeting 'openai'. Package name designed to trick developers who mistype the openai package name. Harvests API keys passed to the fake SDK.",
+      "attack_type": "typosquat",
+      "reported_at": "2024-01",
+      "indicators": [
+        "Package accepts API keys but returns errors",
+        "Not a known OpenAI official package"
+      ],
+      "references": [
+        "https://pypi.org/project/openai-gptx/"
+      ],
+      "remediation": "The official OpenAI package is 'openai'. Always verify package names."
+    },
+    {
+      "package": "langchian",
+      "version": null,
+      "hashes": [],
+      "severity": "HIGH",
+      "cve": null,
+      "description": "Typosquat targeting 'langchain'. Common misspelling. Any version of this package should be treated as malicious.",
+      "attack_type": "typosquat",
+      "reported_at": "2024-03",
+      "indicators": [
+        "Not an official LangChain package",
+        "Minimal legitimate functionality"
+      ],
+      "references": [],
+      "remediation": "The official LangChain package is 'langchain'. Remove immediately."
+    },
+    {
+      "package": "transformers-agent",
+      "version": null,
+      "hashes": [],
+      "severity": "MEDIUM",
+      "cve": null,
+      "description": "Malicious package targeting developers looking for HuggingFace transformers agents functionality. Not affiliated with HuggingFace. Exfiltrates Hugging Face tokens.",
+      "attack_type": "confusable_name",
+      "reported_at": "2024-06",
+      "indicators": [
+        "Not published by HuggingFace",
+        "Minimal code with credential access patterns"
+      ],
+      "references": [],
+      "remediation": "HuggingFace Transformers agents are part of the official 'transformers' package."
+    }
+  ]
+}
